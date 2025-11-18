@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+vendor
+.git
+.gitignore
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.yml
+Dockerfile
+README.md
+.editorconfig
+.gitattributes
