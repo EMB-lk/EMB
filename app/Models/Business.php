@@ -77,4 +77,91 @@ class Business extends Model
     {
         $this->increment('view_count');
     }
+
+    /**
+     * Check if the business has an active subscription
+     */
+    public function hasActiveSubscription(): bool
+    {
+        $subscription = $this->currentSubscription;
+        return $subscription && $subscription->isActive();
+    }
+
+    /**
+     * Get the current plan
+     */
+    public function getCurrentPlan(): ?Plan
+    {
+        return $this->currentSubscription?->plan;
+    }
+
+    /**
+     * Check if the business can access a specific feature
+     */
+    public function canAccessFeature(string $feature): bool
+    {
+        $plan = $this->getCurrentPlan();
+
+        if (!$plan) {
+            return false;
+        }
+
+        return match($feature) {
+            'custom_domain' => $plan->custom_domain,
+            'analytics' => $plan->analytics,
+            'priority_support' => $plan->priority_support,
+            default => false,
+        };
+    }
+
+    /**
+     * Check if the business can upload photos
+     */
+    public function canUploadPhotos(int $count = 1): bool
+    {
+        $plan = $this->getCurrentPlan();
+        $maxPhotos = $plan ? $plan->max_photos : 5;
+        $currentPhotos = is_array($this->photos) ? count($this->photos) : 0;
+
+        return ($currentPhotos + $count) <= $maxPhotos;
+    }
+
+    /**
+     * Get remaining photo slots
+     */
+    public function getRemainingPhotoSlots(): int
+    {
+        $plan = $this->getCurrentPlan();
+        $maxPhotos = $plan ? $plan->max_photos : 5;
+        $currentPhotos = is_array($this->photos) ? count($this->photos) : 0;
+
+        return max(0, $maxPhotos - $currentPhotos);
+    }
+
+    /**
+     * Get max photos allowed
+     */
+    public function getMaxPhotos(): int
+    {
+        $plan = $this->getCurrentPlan();
+        return $plan ? $plan->max_photos : 5;
+    }
+
+    /**
+     * Check if the business is on a free plan
+     */
+    public function isOnFreePlan(): bool
+    {
+        $plan = $this->getCurrentPlan();
+        return $plan && $plan->is_free;
+    }
+
+    /**
+     * Check if the business is on a professional plan
+     */
+    public function isOnProfessionalPlan(): bool
+    {
+        $plan = $this->getCurrentPlan();
+        return $plan && !$plan->is_free;
+    }
 }
