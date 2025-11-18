@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: emb-app
+    container_name: emb-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./storage:/var/www/html/storage
+    networks:
+      - emb-network
+    depends_on:
+      - db
+
+  webserver:
+    image: nginx:alpine
+    container_name: emb-webserver
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - emb-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: emb-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: emb_directory
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: emb_user
+      MYSQL_PASSWORD: emb_password
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - emb-network
+
+networks:
+  emb-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
